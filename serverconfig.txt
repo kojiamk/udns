@@ -1,4 +1,4 @@
-#1 Update Package Source 
+# 01 Update Package Source 
 nano /etc/apt/sources.list
 
 # Copy & Paste the following (Edit as needed)
@@ -10,7 +10,7 @@ deb https://cloudfront.debian.net/debian-security bookworm-security main contrib
 
 # --------------------------------------------------
 
-#2 Configure Network Interfaces
+# 02 Configure Network Interfaces
 nano /etc/network/interfaces
 
 # Copy & Paste the following (Edit as needed)
@@ -55,7 +55,7 @@ ip route show
 
 # --------------------------------------------------
 
-#3 Configure Firewall
+# 03 Configure Firewall
 ufw allow 53/udp
 ufw allow 53/tcp
 ufw allow 22
@@ -77,7 +77,7 @@ To                         Action      From
 
 # --------------------------------------------------
 
-#4 Create Dummy Interfaces for Anycast DNS
+# 04 Create Dummy Interfaces for Anycast DNS
 nano /etc/systemd/network/any10.netdev 
 
 # Copy & Paste the following (Edit as needed)
@@ -127,13 +127,13 @@ ip route show
 
 # --------------------------------------------------
 
-#5 Install Unbound
+# 05 Install Unbound
 apt update && apt upgrade -y
 apt install unbound unbound-anchor -y
 
 # --------------------------------------------------
 
-#6 Download & Store Root Hints File
+# 06 Download & Store Root Hints File
 curl -o /var/lib/unbound/root.hints https://www.internic.net/domain/named.root
 
 chown unbound:unbound /var/lib/unbound/root.hints
@@ -141,7 +141,7 @@ chmod 644 /var/lib/unbound/root.hints
 
 # --------------------------------------------------
 
-#7 Setting Root Trust Anchor for DNSSEC
+# 07 Setting Root Trust Anchor for DNSSEC
 unbound-anchor -a /var/lib/unbound/root.key
 
 chown unbound:unbound /var/lib/unbound/root.key
@@ -149,7 +149,7 @@ chmod 644 /var/lib/unbound/root.key
 
 # --------------------------------------------------
 
-#8 Configure Unbound DNS Resolver
+# 08 Configure Unbound DNS Resolver
 nano /etc/unbound/unbound.conf.d/ydns.conf 
 
 # Copy & Paste the following (Edit as needed)
@@ -232,6 +232,31 @@ server:
 
 # Check Unbound Configuration
 unbound-checkconf
+
+# --------------------------------------------------
+
+# 09 Change DNS 
+nano /etc/network/interfaces
+
+# Edit DNS section as following
+# The primary network interface
+allow-hotplug ens18
+iface ens18 inet static
+	address 203.81.169.12/24
+	gateway 203.81.169.254
+	# dns-* options are implemented by the resolvconf package, if installed
+	dns-nameservers 127.0.0.1
+	# 8.8.8.8 8.8.4.4 9.9.9.9
+	dns-search YTP.COM.MM
+
+# Save & Exit
+
+# Restart Network Service
+systemctl restart networking.service
+
+# Verify Interface & IP Address
+ip addr show
+ip route show
 
 # --------------------------------------------------
 
