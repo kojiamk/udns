@@ -1,13 +1,13 @@
 !
 interface GigabitEthernet 1/3/0
- description to_DNS01
+ description to_MDY_NS1
  vrf HSI
- ip address 10.9.88.137 255.255.255.252
+ ip address 10.9.88.140 255.255.255.254
  no shutdown
 !
 !
 ip sla 101
- dns www.internic.net name-server 10.9.88.138 source-ip 10.9.88.137
+ dns www.internic.net name-server 10.9.88.141 source-ip 10.9.88.140
  vrf HSI
  threshold 3000
  frequency 30
@@ -20,8 +20,8 @@ track 101 ip sla 101 reachability
  default-state up
 !
 !
-ip route vrf HSI 10.10.10.10 255.255.255.255 10.9.88.138 track 101
-ip route vrf HSI 10.10.10.11 255.255.255.255 10.9.88.138 track 101
+ip route vrf HSI 10.10.10.10 255.255.255.255 10.9.88.141 track 101
+ip route vrf HSI 10.10.10.11 255.255.255.255 10.9.88.141 track 101
 !
 !
 ip access-list standard ACL_ANYCAST
