@@ -24,25 +24,20 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
+# Public IP Address for Outgoing DNS Query
 allow-hotplug ens18
 iface ens18 inet static
-	address 203.81.169.12/24
+	address 203.81.169.251/24
 	gateway 203.81.169.254
 	# dns-* options are implemented by the resolvconf package, if installed
 	dns-nameservers 8.8.8.8 8.8.4.4 9.9.9.9
 	dns-search YTP.COM.MM
 
 # The secondary network interface
+# Private IP for Peering Anycast Router
 allow-hotplug ens19
 iface ens19 inet static
-	address 192.168.109.12/24
-
-# Static route for internel office network (Optional)
-
-# up ip route add 10.7.0.0/16 via 192.168.109.254 dev ens19
-# down ip route del 10.7.0.0/16 via 192.168.109.254 dev ens19
-# up ip route add 10.8.0.0/16 via 192.168.109.254 dev ens19
-# down ip route del 10.8.0.0/16 via 192.168.109.254 dev ens19
+	address 10.9.88.141/31
 
 # Save & Exit
 
@@ -171,10 +166,10 @@ server:
     root-hints: "/var/lib/unbound/root.hints"
 
     # Source for Outgoing Query
-    outgoing-interface: 203.81.169.12
+    outgoing-interface: 203.81.169.251
 
     # Listen on Internal LAN
-    interface: 192.168.109.12
+    interface: 10.9.88.141
     interface: 127.0.0.1
     interface: 10.10.10.10
     interface: 10.10.10.11
@@ -245,7 +240,7 @@ nano /etc/network/interfaces
 # The primary network interface
 allow-hotplug ens18
 iface ens18 inet static
-	address 203.81.169.12/24
+	address 203.81.169.251/24
 	gateway 203.81.169.254
 	# dns-* options are implemented by the resolvconf package, if installed
 	dns-nameservers 127.0.0.1
