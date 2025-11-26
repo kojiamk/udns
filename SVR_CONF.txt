@@ -25,25 +25,25 @@ iface lo inet loopback
 
 # The primary network interface
 # Public IP Address for Outgoing DNS Query
-allow-hotplug ens18
-iface ens18 inet static
+allow-hotplug eno1
+iface eno1 inet static
 	address 203.81.169.251/24
 	gateway 203.81.169.254
 	# dns-* options are implemented by the resolvconf package, if installed
 	dns-nameservers 8.8.8.8 8.8.4.4 9.9.9.9
-	dns-search YTP.COM.MM
+	dns-search teleport.net.mm
 
 # The secondary network interface
 # Private IP for Peering Anycast Router
-allow-hotplug ens19
-iface ens19 inet static
-	address 10.9.88.141/31
+allow-hotplug eno2
+iface eno2 inet static
+	address 10.9.88.151/31
 
 # Save & Exit
 
 # Restart Network Service
-systemctl restart ifup@ens18
-systemctl restart ifup@ens19
+systemctl restart ifup@eno1
+systemctl restart ifup@eno2
 
 # Verify Interface & IP Address
 ip addr show
@@ -51,7 +51,7 @@ ip route show
 
 # --------------------------------------------------
 
-apt –y install curl wget apt-transport-https dirmngr git gnupg ca-certificates ufw openssh-server software-properties-common net-tools build-essential
+apt install curl wget apt-transport-https dirmngr git gnupg ca-certificates ufw openssh-server software-properties-common net-tools build-essential -y
 
 # 03 Configure Firewall
 ufw allow 53/udp
@@ -76,43 +76,24 @@ To                         Action      From
 # --------------------------------------------------
 
 # 04 Create Dummy Interfaces for Anycast DNS
-nano /etc/systemd/network/any10.netdev 
+echo "dummy" | tee /etc/modules-load.d/dummy.conf
+
+nano /etc/network/interfaces
 
 # Copy & Paste the following (Edit as needed)
-[NetDev]
-Name=any10.ns
-Kind=dummy
-
-# Save & Exit
-
-nano /etc/systemd/network/any10.network
-
-# Copy & Paste the following (Edit as needed)
-[Match]
-Name=any10.ns
-
-[Network]
-Address=10.10.10.10/32
-
-# Save & Exit
-
-nano /etc/systemd/network/any11.netdev 
-
-# Copy & Paste the following (Edit as needed)
-[NetDev]
-Name=any11.ns
-Kind=dummy
-
-# Save & Exit
-
-nano /etc/systemd/network/any11.network
-
-# Copy & Paste the following (Edit as needed)
-[Match]
-Name=any11.ns
-
-[Network]
-Address=10.10.10.11/32
+# --- Dummy Interface 1: any10.ns ---
+auto any10.ns
+iface any10.ns inet static
+    pre-up ip link add any10.ns type dummy
+    address 10.10.10.10/32
+    post-down ip link del any10.ns 
+    
+# --- Dummy Interface 2: any11.ns ---
+auto any11.ns
+iface any11.ns inet static
+    pre-up ip link add any11.ns type dummy
+    address 10.10.10.11/32
+    post-down ip link del any11.ns
 
 # Save & Exit
 
@@ -140,6 +121,13 @@ chmod 644 /var/lib/unbound/root.hints
 # --------------------------------------------------
 
 # 07 Setting Root Trust Anchor for DNSSEC
+nano /etc/unbound/unbound.conf.d/root-auto-trust-anchor-file.conf
+
+# Comment out the follwing line
+auto-trust-anchor-file: "/var/lib/unbound/root.key"
+
+# Save & Exit
+
 unbound-anchor -a /var/lib/unbound/root.key
 
 chown unbound:unbound /var/lib/unbound/root.key
@@ -169,7 +157,7 @@ server:
     outgoing-interface: 203.81.169.251
 
     # Listen on Internal LAN
-    interface: 10.9.88.141
+    interface: 10.9.88.151
     interface: 127.0.0.1
     interface: 10.10.10.10
     interface: 10.10.10.11
@@ -183,7 +171,7 @@ server:
     access-control: 0.0.0.0/0 refuse
 	
     # Performance Tuning for ~5000 Clients
-    num-threads: 4			# CPUs count
+    num-threads: 2			# CPUs count
     msg-cache-size: 512m
     rrset-cache-size: 1024m
     msg-cache-slabs: 4
@@ -238,14 +226,14 @@ nano /etc/network/interfaces
 
 # Edit DNS section as following
 # The primary network interface
-allow-hotplug ens18
+allow-hotplug eno1
 iface ens18 inet static
 	address 203.81.169.251/24
 	gateway 203.81.169.254
 	# dns-* options are implemented by the resolvconf package, if installed
 	dns-nameservers 127.0.0.1
 	# 8.8.8.8 8.8.4.4 9.9.9.9
-	dns-search YTP.COM.MM
+	dns-search teleport.net.mm
 
 # Save & Exit
 
@@ -285,6 +273,7 @@ journal -u unbound -f
 
 # Check Listening Address
 netstat -tulpn | grep 53
+ss -tuln | grep 53
 
 # Check Performance
 unbound-control stats_noreset
