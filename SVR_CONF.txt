@@ -78,26 +78,49 @@ To                         Action      From
 # 04 Create Dummy Interfaces for Anycast DNS
 echo "dummy" | tee /etc/modules-load.d/dummy.conf
 
-nano /etc/network/interfaces
+nano /etc/systemd/network/any10.netdev
 
 # Copy & Paste the following (Edit as needed)
-# --- Dummy Interface 1: any10.ns ---
-auto any10.ns
-iface any10.ns inet static
-    pre-up ip link add any10.ns type dummy
-    address 10.10.10.10/32
-    post-down ip link del any10.ns 
-    
-# --- Dummy Interface 2: any11.ns ---
-auto any11.ns
-iface any11.ns inet static
-    pre-up ip link add any11.ns type dummy
-    address 10.10.10.11/32
-    post-down ip link del any11.ns
+[NetDev]
+Name=any10.ns
+Kind=dummy
 
 # Save & Exit
 
-# Restart Network Service
+nano /etc/systemd/network/any10.network
+
+# Copy & Paste the following (Edit as needed)
+[Match]
+Name=any10.ns
+
+[Network]
+Address=10.10.10.10/32
+
+# Save & Exit
+
+nano /etc/systemd/network/any11.netdev
+
+# Copy & Paste the following (Edit as needed)
+[NetDev]
+Name=any11.ns
+Kind=dummy
+
+# Save & Exit
+
+nano /etc/systemd/network/any11.network
+
+# Copy & Paste the following (Edit as needed)
+[Match]
+Name=any11.ns
+
+[Network]
+Address=10.10.10.11/32
+
+# Save & Exit
+
+# Enable & Restart Network Service
+systemctl enable systemd-networkd
+systemctl restart systemd-networkd
 systemctl restart networking.service
 
 # Verify Interface & IP Address
