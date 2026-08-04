@@ -292,7 +292,7 @@ dig @127.0.0.1 google.com
 dig @127.0.0.1 sigok.verteiltesysteme.net
 
 # Check Service Log
-journal -u unbound -f
+journalctl -u unbound -f
 
 # Check Listening Address
 netstat -tulpn | grep 53
