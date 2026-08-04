@@ -289,7 +289,11 @@ systemctl status unbound
 
 # Check DNS Lookup
 dig @127.0.0.1 google.com
+dig @127.0.0.1 ibm.com
+dig @127.0.0.1 msn.com +cdflag Output
+dig @127.0.0.1 cisco.com +cdflag Output
 dig @127.0.0.1 sigok.verteiltesysteme.net
+
 
 # Check Service Log
 journalctl -u unbound -f
